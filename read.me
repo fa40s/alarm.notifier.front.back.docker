@@ -1,0 +1,88 @@
+Description:
+    Ce projet permet de créer, modifier et supprimer les zones de temps ("timezones")
+    et/ou notifications.
+    Frontend permet "créer le request" pour le backend et afficher les résultats.
+
+Description technique:
+    Technologies: 
+        Frontend:
+            react, material ui, ws 
+            ...à compléter...
+        Backend:
+            -   Nodejs (testé sur la vérsion: 13.9)
+                npm packets: websocket, concurrency
+            -   Python (testé sur la vérsion: 3.7.6)
+                libs: websockets, asyncio 
+    Réalisation: le frontend et les backends communiquent via websocket: service locale
+    (http://127.0.0.1) et utilise port 1337. Les points d'entrée: server.py (en cas de 
+    python) et server.js (NodeJS).
+    Dans le cadre de chaque backend il y a deux "microservice": la premier service permet 
+    de réaliser CRUD fonctionnement: permet de créer, modifier et supprimer les objets de
+    timezones et notifications (fichier: crud.py et crud.js)
+    La seconde service permet de mettre à jour (intervalle de temps de 1 sec) les objects
+    de notifications et timezones en fonction de temps (heartbeat.py/heartbeat.js)
+    Les "basses de données" se trouvent dans les fichiers (db.py/db.js). Le nombre de
+    fichiers correspond au nombre de possible "microservices":
+
+    1. server (load balancer)
+    2. heartbeat/crud - deux fonctionnalités dédiées au besoins spécifiques
+    3. Base de données
+            _____________(heartbeat)___________
+    _______/                                   \_
+    (server)                                   (db)
+           \_______________(crud)______________/
+
+    Réalisation de communication entre les "microservices": par import de modules.
+    En réalité il faut utiliser des services plus adéquates, comme Kafka, RabbitMQ, etc
+
+    Fonctionalités à réaliser:
+        - notifications de résultats de service crud. En ce moment le frontend n'est pas informé 
+          d'état de son request. Le résultat peut être détecté que par "l'effet sécondaire" (
+          changement de réponse (JSON) "heartbeat")
+        - validation adéquate des valeurs fournies (côté frontend et backend):
+            quels sont les champs obligatoires?
+            quelles sont les possibles valeurs?
+            -En ce moment, il n'y a pas de validations adéquates. Il y a que validation de
+             timezones par le backend en python par module pytz. Côté nodejs à réaliser.
+        - service de logging (success/erreurs/statistique, etc)  
+
+Examples de "request-response" (pas de REST):
+
+    -Direction:
+        Frontend ----------> Backend
+
+    -"Microservice": crud
+
+    -Type: JSON
+
+    -Example: 
+        -{action: "delete", type: "timezone[/notification]", object: {id: number} }
+        -{action: "create", type: "timezone[/notification]", object: {name: string,
+                                                                      [comment: string,]
+                                                                      zone: string,
+                                                                      [timestamp: number]}
+        -{action: "update", type: "timezone[/notification]", object: {id: number,
+                                                                      name: string,
+                                                                      [comment: string,]
+                                                                      zone: string,
+                                                                      [timestamp: number]}}
+
+
+ -Direction:
+        Frontend <---------- Backend
+
+    -Type: JSON
+
+    -"Microservice": heartbeat (chaque seconde)
+
+    -Example: 
+        {'utc_time': number,
+                'timezones': [..[objects]],
+                'notifications': [..[objects]]}
+
+
+
+
+
+
+
